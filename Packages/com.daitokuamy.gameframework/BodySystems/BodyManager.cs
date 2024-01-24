@@ -107,7 +107,7 @@ namespace GameFramework.BodySystems {
 
             for (var i = 0; i < _bodyInfos.Count; i++) {
                 var bodyInfo = _bodyInfos[i];
-                if (bodyInfo.disposed) {
+                if (bodyInfo.disposed || !bodyInfo.body.IsActive) {
                     continue;
                 }
 
@@ -123,7 +123,7 @@ namespace GameFramework.BodySystems {
 
             for (var i = 0; i < _bodyInfos.Count; i++) {
                 var bodyInfo = _bodyInfos[i];
-                if (bodyInfo.disposed) {
+                if (bodyInfo.disposed || !bodyInfo.body.IsActive) {
                     continue;
                 }
 

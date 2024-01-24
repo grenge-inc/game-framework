@@ -6,6 +6,12 @@ namespace GameFramework.BodySystems {
     /// Body(管理インターフェース用)
     /// </summary>
     public interface IBody : IDisposable, IScope {
+
+        /// <summary>
+        /// 有効かどうか
+        /// </summary>
+        bool IsActive { get; }
+        
         /// <summary>
         /// 初期化処理(Controllerが全て追加された後の処理)
         /// </summary>
