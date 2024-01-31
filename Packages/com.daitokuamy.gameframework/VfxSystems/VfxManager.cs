@@ -658,6 +658,12 @@ namespace GameFramework.VfxSystems {
                     .ToList();
                 _workParticleSystems.Clear();
                 FindRootParticleSystems(instance.transform, _workParticleSystems);
+
+                foreach (var particleSystem in _workParticleSystems) {
+                    var ps = particleSystem.main;
+                    ps.stopAction = ParticleSystemStopAction.None;
+                }
+                
                 vfxComponents.AddRange(_workParticleSystems.Select(x => new ParticleSystemVfxComponent(x)));
                 instance.SetActive(false);
                     
