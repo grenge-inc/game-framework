@@ -102,8 +102,20 @@ namespace GameFramework.UISystems {
             public override Exception Exception => assetHandle.Exception;
 
             public override void Release() {
-                SceneManager.UnloadSceneAsync(assetHandle.Scene);
-                assetHandle.Release();
+                var operation = SceneManager.UnloadSceneAsync(assetHandle.Scene);
+                if (operation != null) {
+                    operation.completed += _ => {
+                        try {
+                            assetHandle.Release();
+                        }
+                        catch (Exception e) {
+                            Debug.LogException(e);
+                        }
+                    };
+                }
+                else {
+                    assetHandle.Release();
+                }
             }
         }
 
