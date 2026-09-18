@@ -50,17 +50,20 @@ namespace GameFramework.UISystems {
         /// <summary>
         /// SafeAreaの反映
         /// </summary>
-        private void Apply(bool force = false) {
+        /// <param name="force">変化が無くても再適用するか</param>
+        /// <returns>SafeAreaの適用状態が有効か</returns>
+        private bool Apply(bool force = false) {
             var safeArea = Screen.safeArea;
             var resolution = new Vector2Int(Screen.width, Screen.height);
 
             if (resolution.x == 0 || resolution.y == 0) {
-                return;
+                return false;
             }
 
             if (!force) {
                 if (_lastSafeArea == safeArea && _lastResolution == resolution) {
-                    return;
+                    // 書き込みは不要だが、適用済みの状態なので有効
+                    return true;
                 }
             }
 
@@ -68,6 +71,14 @@ namespace GameFramework.UISystems {
             _lastResolution = resolution;
 
             var trans = RectTransform;
+#if UNITY_EDITOR
+            // transへの書き込みより前に登録しないと、Editor側の変更検知を抑止できない
+            _rectTransformTracker.Clear();
+            _rectTransformTracker.Add(this, trans,
+                DrivenTransformProperties.Anchors |
+                DrivenTransformProperties.AnchoredPosition |
+                DrivenTransformProperties.SizeDelta);
+#endif
             var anchorMin = new Vector2(safeArea.xMin / resolution.x, safeArea.yMin / resolution.y);
             var anchorMax = new Vector2(safeArea.xMax / resolution.x, safeArea.yMax / resolution.y);
 
@@ -91,6 +102,8 @@ namespace GameFramework.UISystems {
             trans.sizeDelta = Vector2.zero;
             trans.anchorMin = anchorMin;
             trans.anchorMax = anchorMax;
+
+            return true;
         }
 
         /// <summary>
@@ -104,7 +117,9 @@ namespace GameFramework.UISystems {
         /// 更新処理
         /// </summary>
         private void Update() {
-            Apply(_dirty);
+            if (Apply(_dirty)) {
+                _dirty = false;
+            }
         }
 
         /// <summary>
