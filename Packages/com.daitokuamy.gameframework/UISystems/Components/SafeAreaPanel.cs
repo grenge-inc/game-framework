@@ -60,25 +60,8 @@ namespace GameFramework.UISystems {
                 return false;
             }
 
-            if (!force) {
-                if (_lastSafeArea == safeArea && _lastResolution == resolution) {
-                    // 書き込みは不要だが、適用済みの状態なので有効
-                    return true;
-                }
-            }
-
-            _lastSafeArea = safeArea;
-            _lastResolution = resolution;
-
             var trans = RectTransform;
-#if UNITY_EDITOR
-            // transへの書き込みより前に登録しないと、Editor側の変更検知を抑止できない
-            _rectTransformTracker.Clear();
-            _rectTransformTracker.Add(this, trans,
-                DrivenTransformProperties.Anchors |
-                DrivenTransformProperties.AnchoredPosition |
-                DrivenTransformProperties.SizeDelta);
-#endif
+
             var anchorMin = new Vector2(safeArea.xMin / resolution.x, safeArea.yMin / resolution.y);
             var anchorMax = new Vector2(safeArea.xMax / resolution.x, safeArea.yMax / resolution.y);
 
@@ -98,6 +81,35 @@ namespace GameFramework.UISystems {
                 anchorMax.y = 1.0f;
             }
 
+#if UNITY_EDITOR
+            // Undoやオーバーライドの取り消しは書き込んだ値だけを巻き戻し、キャッシュは巻き戻らない。
+            // driven登録により手作業での修正も塞がるため、エディットモードでは実値の不一致も再適用の条件にする。
+            // 実行中に含めると、外部からの書き込みを毎フレーム踏み潰す挙動へ戻ってしまう
+            if (!Application.isPlaying &&
+                (trans.anchorMin != anchorMin || trans.anchorMax != anchorMax ||
+                    trans.anchoredPosition != Vector2.zero || trans.sizeDelta != Vector2.zero)) {
+                force = true;
+            }
+#endif
+
+            if (!force) {
+                if (_lastSafeArea == safeArea && _lastResolution == resolution) {
+                    // 書き込みは不要だが、適用済みの状態なので有効
+                    return true;
+                }
+            }
+
+            _lastSafeArea = safeArea;
+            _lastResolution = resolution;
+
+#if UNITY_EDITOR
+            // transへの書き込みより前に登録しないと、Editor側の変更検知を抑止できない
+            _rectTransformTracker.Clear();
+            _rectTransformTracker.Add(this, trans,
+                DrivenTransformProperties.Anchors |
+                DrivenTransformProperties.AnchoredPosition |
+                DrivenTransformProperties.SizeDelta);
+#endif
             trans.anchoredPosition = Vector2.zero;
             trans.sizeDelta = Vector2.zero;
             trans.anchorMin = anchorMin;
